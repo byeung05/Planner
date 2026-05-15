@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, useWindowDimensions } from 'react-native';
+import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -65,7 +65,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
   const translateY = useSharedValue(0);
   const isDragging = useSharedValue(false);
   const startY = useSharedValue(0);
-  const didDrag = useSharedValue(false);
+  const pressed = useSharedValue(false);
 
   const [dragLabel, setDragLabel] = useState<string | null>(null);
 
@@ -84,23 +84,18 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
     moveBlock(block.id, Math.floor(newMin / 60), newMin % 60);
   }, [block.id, block.startHour, block.startMin, moveBlock]);
 
-  const handlePress = useCallback(() => {
-    // Prevent the touch-up after a drag from opening the sheet
-    if (!didDrag.value) {
-      onPress(block);
-    }
-    didDrag.value = false;
+  const handleTap = useCallback(() => {
+    onPress(block);
   }, [block, onPress]);
 
+  // Pan for drag-to-reposition
   const pan = Gesture.Pan()
     .minDistance(4)
     .onStart(() => {
       startY.value = translateY.value;
       isDragging.value = true;
-      didDrag.value = false;
     })
     .onUpdate((e) => {
-      didDrag.value = true;
       translateY.value = startY.value + e.translationY;
       runOnJS(updateDragLabel)(translateY.value);
     })
@@ -111,12 +106,24 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
       runOnJS(clearDragLabel)();
     });
 
-  const animStyle = useAnimatedStyle(() => ({
+  // Tap for opening block sheet — Exclusive ensures pan cancels tap when dragging
+  const tap = Gesture.Tap()
+    .onBegin(() => { pressed.value = true; })
+    .onFinalize(() => { pressed.value = false; })
+    .onEnd(() => { runOnJS(handleTap)(); });
+
+  const gesture = Gesture.Exclusive(pan, tap);
+
+  const wrapperStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
     zIndex: isDragging.value ? 300 : 10,
     shadowOpacity: isDragging.value ? 0.5 : isPast ? 0.05 : 0.15,
     shadowRadius: isDragging.value ? 16 : 5,
     elevation: isDragging.value ? 12 : isPast ? 1 : 3,
+  }));
+
+  const blockStyle = useAnimatedStyle(() => ({
+    opacity: pressed.value ? 0.75 : 1,
   }));
 
   const isCompleted = Boolean(block.completedAt);
@@ -133,12 +140,12 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
     : `${Math.floor(block.durationMin / 60)}h ${block.durationMin % 60}m`;
 
   return (
-    <GestureDetector gesture={pan}>
+    <GestureDetector gesture={gesture}>
       <Animated.View
         style={[
           styles.wrapper,
           { top: baseTop, height, left: LEFT_OFFSET, right: RIGHT_MARGIN },
-          animStyle,
+          wrapperStyle,
         ]}
       >
         {/* Drag time badge */}
@@ -148,15 +155,14 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
           </View>
         )}
 
-        <TouchableOpacity
+        <Animated.View
           style={[
             styles.block,
             { height },
             isCurrent && { borderColor: accent },
             isCompleted && styles.blockDone,
+            blockStyle,
           ]}
-          onPress={handlePress}
-          activeOpacity={0.82}
         >
           {/* Progressive fill — covers top portion based on elapsed time */}
           {fillPct > 0 && (
@@ -168,6 +174,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
                   backgroundColor: fillColor,
                 },
               ]}
+              pointerEvents="none"
             />
           )}
 
@@ -207,7 +214,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
               </Text>
             )}
 
-            {/* Slim progress bar for the currently active block */}
+            {/* Slim progress bar for the active block */}
             {isCurrent && height > 52 && (
               <View style={styles.progressTrack}>
                 <View
@@ -219,7 +226,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
               </View>
             )}
           </View>
-        </TouchableOpacity>
+        </Animated.View>
       </Animated.View>
     </GestureDetector>
   );
