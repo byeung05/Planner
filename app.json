@@ -9,6 +9,16 @@
     "splash": { "resizeMode": "contain", "backgroundColor": "#F2F2F8" },
     "ios": { "supportsTablet": false },
     "android": { "adaptiveIcon": { "backgroundColor": "#F2F2F8" } },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png",
+      "name": "Planner",
+      "shortName": "Planner",
+      "description": "Track sleep, study, and schedule in one timeline",
+      "themeColor": "#7B6FD4",
+      "backgroundColor": "#F2F2F8"
+    },
     "plugins": ["expo-router"]
   }
 }

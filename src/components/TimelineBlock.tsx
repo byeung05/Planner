@@ -1,13 +1,12 @@
 import React, { useCallback } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import Animated, {
-  useAnimatedGestureHandler,
   useAnimatedStyle,
   useSharedValue,
-  runOnJS,
   withSpring,
+  runOnJS,
 } from 'react-native-reanimated';
-import { PanGestureHandler, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { Block } from '../types';
 import { domainColors } from '../colors';
 import { formatTime, formatDuration, snapToQuarter } from '../utils/time';
@@ -34,6 +33,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Timelin
 
   const translateY = useSharedValue(0);
   const isDragging = useSharedValue(false);
+  const startY = useSharedValue(0);
 
   const onSnap = useCallback(
     (deltaY: number) => {
@@ -41,29 +41,24 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Timelin
       const newTotalMin = snapToQuarter(
         Math.max(0, Math.min(block.startHour * 60 + block.startMin + deltaMin, 23 * 60))
       );
-      const newHour = Math.floor(newTotalMin / 60);
-      const newMin = newTotalMin % 60;
-      moveBlock(block.id, newHour, newMin);
+      moveBlock(block.id, Math.floor(newTotalMin / 60), newTotalMin % 60);
     },
     [block.id, block.startHour, block.startMin, moveBlock]
   );
 
-  type Context = { startY: number };
-
-  const gestureHandler = useAnimatedGestureHandler<PanGestureHandlerGestureEvent, Context>({
-    onStart: (_, ctx) => {
-      ctx.startY = translateY.value;
+  const pan = Gesture.Pan()
+    .onStart(() => {
+      startY.value = translateY.value;
       isDragging.value = true;
-    },
-    onActive: (event, ctx) => {
-      translateY.value = ctx.startY + event.translationY;
-    },
-    onEnd: () => {
+    })
+    .onUpdate((e) => {
+      translateY.value = startY.value + e.translationY;
+    })
+    .onEnd(() => {
       isDragging.value = false;
       runOnJS(onSnap)(translateY.value);
       translateY.value = withSpring(0, { damping: 20 });
-    },
-  });
+    });
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
@@ -75,7 +70,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Timelin
   const isCompleted = Boolean(block.completedAt);
 
   return (
-    <PanGestureHandler onGestureEvent={gestureHandler}>
+    <GestureDetector gesture={pan}>
       <Animated.View
         style={[
           styles.block,
@@ -97,10 +92,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Timelin
         >
           <Text style={styles.icon}>{block.icon}</Text>
           <View style={styles.textContainer}>
-            <Text
-              style={[styles.title, { color: colors.text }]}
-              numberOfLines={1}
-            >
+            <Text style={[styles.title, { color: colors.text }]} numberOfLines={1}>
               {block.title}
             </Text>
             {height > 44 && (
@@ -109,13 +101,11 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Timelin
               </Text>
             )}
           </View>
-          {isCompleted && (
-            <Text style={styles.checkmark}>✓</Text>
-          )}
+          {isCompleted && <Text style={styles.checkmark}>✓</Text>}
           <View style={[styles.accentBar, { backgroundColor: colors.accent }]} />
         </TouchableOpacity>
       </Animated.View>
-    </PanGestureHandler>
+    </GestureDetector>
   );
 }
 
@@ -125,7 +115,6 @@ const styles = StyleSheet.create({
     left: BLOCK_LEFT,
     right: BLOCK_RIGHT,
     borderRadius: 10,
-    borderWidth: 1,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -139,33 +128,14 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     gap: 6,
   },
-  icon: {
-    fontSize: 16,
-  },
-  textContainer: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  time: {
-    fontSize: 11,
-    fontWeight: '400',
-    marginTop: 1,
-  },
-  checkmark: {
-    fontSize: 14,
-    color: '#4CAF50',
-    fontWeight: '700',
-  },
+  icon: { fontSize: 16 },
+  textContainer: { flex: 1 },
+  title: { fontSize: 13, fontWeight: '600' },
+  time: { fontSize: 11, marginTop: 1 },
+  checkmark: { fontSize: 14, color: '#4CAF50', fontWeight: '700' },
   accentBar: {
     position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 3,
-    borderTopLeftRadius: 10,
-    borderBottomLeftRadius: 10,
+    left: 0, top: 0, bottom: 0, width: 3,
+    borderTopLeftRadius: 10, borderBottomLeftRadius: 10,
   },
 });
