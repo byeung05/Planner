@@ -21,9 +21,10 @@ const BLOCK_RIGHT = 8;
 interface TimelineBlockProps {
   block: Block;
   onPress: (block: Block) => void;
+  isTimerActive?: boolean;
 }
 
-export function TimelineBlock({ block, onPress }: TimelineBlockProps) {
+export function TimelineBlock({ block, onPress, isTimerActive = false }: TimelineBlockProps) {
   const moveBlock = useBlockStore((s) => s.moveBlock);
   const colors = domainColors(block.domain);
 
@@ -82,7 +83,8 @@ export function TimelineBlock({ block, onPress }: TimelineBlockProps) {
             top: baseTop,
             height,
             backgroundColor: colors.bg,
-            borderColor: colors.border,
+            borderColor: isTimerActive ? colors.accent : colors.border,
+            borderWidth: isTimerActive ? 2 : 1,
             opacity: isCompleted ? 0.6 : 1,
           },
           animatedStyle,
