@@ -1,34 +1,29 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { Colors } from '../colors';
-import { currentTimeMinutes } from '../utils/time';
+import { Dark } from '../colors';
+import { currentTimeMinutes, formatTime } from '../utils/time';
+import { HOUR_HEIGHT, START_HOUR } from './TimelineBlock';
 
-const HOUR_HEIGHT = 60;
-const START_HOUR = 6;
+const SPINE_X = 52;
 
-interface NowLineProps {
-  visible?: boolean;
-}
-
-export function NowLine({ visible = true }: NowLineProps) {
+export function NowLine() {
   const [minutes, setMinutes] = useState(currentTimeMinutes());
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setMinutes(currentTimeMinutes());
-    }, 30000);
-    return () => clearInterval(interval);
+    const id = setInterval(() => setMinutes(currentTimeMinutes()), 30_000);
+    return () => clearInterval(id);
   }, []);
 
-  if (!visible) return null;
+  const offsetMin = minutes - START_HOUR * 60;
+  if (offsetMin < 0) return null;
 
-  const offsetMinutes = minutes - START_HOUR * 60;
-  if (offsetMinutes < 0) return null;
-
-  const top = (offsetMinutes / 60) * HOUR_HEIGHT;
+  const top = (offsetMin / 60) * HOUR_HEIGHT;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
 
   return (
     <View style={[styles.container, { top }]} pointerEvents="none">
+      <Text style={styles.timeLabel}>{formatTime(h, m)}</Text>
       <View style={styles.dot} />
       <View style={styles.line} />
     </View>
@@ -38,23 +33,35 @@ export function NowLine({ visible = true }: NowLineProps) {
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    left: 48,
+    left: 0,
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    zIndex: 100,
+    zIndex: 200,
+  },
+  timeLabel: {
+    width: SPINE_X - 14,
+    fontSize: 10,
+    fontWeight: '700',
+    color: Dark.accent,
+    textAlign: 'right',
   },
   dot: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: Colors.nowLine,
-    marginLeft: -5,
+    backgroundColor: Dark.accent,
+    marginLeft: 4,
+    shadowColor: Dark.accent,
+    shadowOpacity: 0.6,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 0 },
   },
   line: {
     flex: 1,
-    height: 2,
-    backgroundColor: Colors.nowLine,
-    opacity: 0.8,
+    height: 1.5,
+    backgroundColor: Dark.accent,
+    opacity: 0.5,
+    marginLeft: 0,
   },
 });

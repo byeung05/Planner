@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Block } from '../types';
-import { Colors } from '../colors';
+import { Dark } from '../colors';
 import { formatTimerSeconds } from '../utils/time';
 
 interface Props {
@@ -11,31 +11,24 @@ interface Props {
 
 export function StudyTimer({ block, onStop }: Props) {
   const [elapsed, setElapsed] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const ref = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    intervalRef.current = setInterval(() => {
-      setElapsed((s) => s + 1);
-    }, 1000);
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
+    ref.current = setInterval(() => setElapsed((s) => s + 1), 1000);
+    return () => { if (ref.current) clearInterval(ref.current); };
   }, []);
 
-  const progress = Math.min(elapsed / (block.durationMin * 60), 1);
-  const pct = Math.round(progress * 100);
+  const pct = Math.min(100, Math.round((elapsed / (block.durationMin * 60)) * 100));
 
   return (
-    <View style={styles.container}>
-      <View style={styles.left}>
-        <Text style={styles.icon}>{block.icon}</Text>
-        <View>
-          <Text style={styles.label} numberOfLines={1}>{block.title}</Text>
-          <Text style={styles.pct}>{pct}% complete</Text>
-        </View>
+    <View style={styles.bar}>
+      <Text style={styles.icon}>{block.icon}</Text>
+      <View style={styles.info}>
+        <Text style={styles.name} numberOfLines={1}>{block.title}</Text>
+        <Text style={styles.pct}>{pct}% complete</Text>
       </View>
       <Text style={styles.timer}>{formatTimerSeconds(elapsed)}</Text>
-      <TouchableOpacity style={styles.stopBtn} onPress={onStop} activeOpacity={0.8}>
+      <TouchableOpacity style={styles.stop} onPress={onStop} activeOpacity={0.8}>
         <Text style={styles.stopText}>Stop</Text>
       </TouchableOpacity>
     </View>
@@ -43,48 +36,31 @@ export function StudyTimer({ block, onStop }: Props) {
 }
 
 const styles = StyleSheet.create({
-  container: {
+  bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Colors.study.bg,
+    backgroundColor: Dark.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.study.border,
+    borderBottomColor: Dark.border,
     paddingHorizontal: 16,
     paddingVertical: 10,
     gap: 10,
   },
-  left: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
   icon: { fontSize: 18 },
-  label: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: Colors.study.text,
-  },
-  pct: {
-    fontSize: 11,
-    color: Colors.study.accent,
-    marginTop: 1,
-  },
+  info: { flex: 1 },
+  name: { fontSize: 13, fontWeight: '700', color: Dark.text },
+  pct:  { fontSize: 11, color: Dark.accent, marginTop: 1 },
   timer: {
     fontSize: 20,
     fontWeight: '800',
-    color: Colors.study.accent,
+    color: Dark.accent,
     fontVariant: ['tabular-nums'],
   },
-  stopBtn: {
-    backgroundColor: Colors.study.accent,
+  stop: {
+    backgroundColor: Dark.accent,
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 20,
   },
-  stopText: {
-    color: '#fff',
-    fontWeight: '700',
-    fontSize: 13,
-  },
+  stopText: { color: '#fff', fontWeight: '700', fontSize: 13 },
 });
