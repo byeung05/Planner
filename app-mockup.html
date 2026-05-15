@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Planner — UI Mockup</title>
+<style>
+  :root {
+    --sleep:    #5C4BCC;
+    --study:    #E8604C;
+    --schedule: #F5A623;
+    --now:      #FF3B30;
+    --on-track: #3D9970;
+    --behind:   #E84040;
+    --bg:       #0F0F14;
+    --surface:  #1A1A24;
+    --surface2: #22222F;
+    --border:   #2E2E3E;
+    --text:     #EEEEF5;
+    --sub:      #8888AA;
+    --radius:   18px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0A0A10;
+    font-family: -apple-system, 'SF Pro Text', 'Segoe UI', sans-serif;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 32px 16px;
+    gap: 24px;
+  }
+
+  h1 {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--sub);
+    margin-bottom: 8px;
+  }
+
+  /* ── Phone Shell ── */
+  .phone {
+    width: 375px;
+    min-height: 812px;
+    background: var(--bg);
+    border-radius: 44px;
+    border: 1.5px solid var(--border);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.04) inset;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+  .status-bar .notch {
+    width: 120px; height: 34px;
+    background: #000;
+    border-radius: 0 0 20px 20px;
+    position: absolute;
+    top: 0; left: 50%;
+    transform: translateX(-50%);
+  }
+  .status-icons { display: flex; gap: 6px; align-items: center; }
+  .status-icons svg { width: 16px; height: 16px; fill: var(--text); }
+
+  /* Screen container */
+  .screen {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: 90px;
+    display: none;
+  }
+  .screen.active { display: block; }
+  .screen::-webkit-scrollbar { display: none; }
+
+  /* ── Bottom Nav ── */
+  .bottom-nav {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 84px;
+    background: rgba(20,20,30,0.92);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: 20px;
+    z-index: 100;
+  }
+  .nav-item {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 4px;
+    cursor: pointer; padding: 4px 12px;
+    border-radius: 12px; transition: background 0.15s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.06); }
+  .nav-item.active .nav-label { color: var(--text); }
+  .nav-item .nav-label { font-size: 10px; color: var(--sub); font-weight: 500; }
+  .nav-icon { font-size: 22px; }
+
+  /* ── Section Headers ── */
+  .screen-header {
+    padding: 20px 20px 8px;
+    display: flex; justify-content: space-between; align-items: flex-end;
+  }
+  .screen-title { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; }
+  .screen-date { font-size: 13px; color: var(--sub); }
+
+  /* ══════════════════════════════════════
+     TODAY SCREEN — Vertical Timeline
+  ══════════════════════════════════════ */
+  .timeline { position: relative; padding: 0 20px; }
+
+  .timeline-hour {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    min-height: 60px;
+    position: relative;
+  }
+  .timeline-hour::before {
+    content: '';
+    position: absolute;
+    left: 44px; top: 0; bottom: 0;
+    width: 1px; background: var(--border);
+  }
+  .hour-label {
+    font-size: 11px; color: var(--sub);
+    width: 32px; text-align: right;
+    padding-top: 2px; flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .hour-track { flex: 1; position: relative; min-height: 60px; }
+
+  /* Timeline blocks */
+  .t-block {
+    border-radius: 12px;
+    padding: 8px 12px;
+    margin: 2px 0;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.12s;
+    position: relative;
+    overflow: hidden;
+  }
+  .t-block::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    border-radius: 3px 0 0 3px;
+  }
+  .t-block:hover { transform: scale(1.01); box-shadow: 0 4px 16px rgba(0,0,0,0.4); }
+
+  .t-block.sleep   { background: rgba(92,75,204,0.22); border: 1px solid rgba(92,75,204,0.4); }
+  .t-block.sleep::before   { background: var(--sleep); }
+  .t-block.study   { background: rgba(232,96,76,0.22);  border: 1px solid rgba(232,96,76,0.4); }
+  .t-block.study::before   { background: var(--study); }
+  .t-block.schedule{ background: rgba(245,166,35,0.18); border: 1px solid rgba(245,166,35,0.35);}
+  .t-block.schedule::before{ background: var(--schedule); }
+
+  .t-block-icon { font-size: 16px; }
+  .t-block-title { font-size: 14px; font-weight: 600; margin-bottom: 1px; }
+  .t-block-meta  { font-size: 11px; color: var(--sub); }
+  .t-block-row   { display: flex; align-items: center; gap: 8px; }
+
+  /* Now line */
+  .now-line {
+    display: flex; align-items: center; gap: 8px;
+    margin: 4px 0;
+  }
+  .now-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--now); flex-shrink: 0;
+    margin-left: 36px;
+    box-shadow: 0 0 8px var(--now);
+  }
+  .now-rule {
+    flex: 1; height: 1px;
+    background: linear-gradient(90deg, var(--now) 0%, transparent 100%);
+  }
+  .now-time { font-size: 11px; color: var(--now); font-weight: 600; }
+
+  /* ══════════════════════════════════════
+     QUICK-ADD SHEET
+  ══════════════════════════════════════ */
+  .sheet-overlay {
+    background: var(--surface);
+    border-radius: 24px 24px 0 0;
+    padding: 16px 20px 32px;
+    display: none;
+    flex-direction: column;
+    gap: 16px;
+    position: absolute;
+    bottom: 84px; left: 0; right: 0;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
+    z-index: 200;
+    animation: slideUp 0.25s ease-out;
+  }
+  .sheet-overlay.visible { display: flex; }
+  @keyframes slideUp {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+  .sheet-handle {
+    width: 36px; height: 4px; border-radius: 2px;
+    background: var(--border); margin: 0 auto 4px;
+  }
+  .sheet-title { font-size: 17px; font-weight: 700; text-align: center; }
+
+  .nlp-input-wrap {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 12px 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .nlp-input-wrap input {
+    flex: 1; background: none; border: none; outline: none;
+    color: var(--text); font-size: 16px;
+    font-family: inherit;
+    caret-color: var(--sleep);
+  }
+  .nlp-input-wrap input::placeholder { color: var(--sub); }
+  .mic-btn { font-size: 20px; cursor: pointer; }
+
+  /* NLP parse result chip */
+  .parse-result {
+    background: rgba(92,75,204,0.18);
+    border: 1px solid rgba(92,75,204,0.45);
+    border-radius: 12px;
+    padding: 10px 14px;
+    display: flex; gap: 12px; align-items: center;
+    font-size: 13px;
+  }
+  .parse-result .parsed-icon { font-size: 22px; }
+  .parse-key   { color: var(--sub); font-size: 11px; }
+  .parse-value { color: var(--text); font-weight: 600; }
+  .parse-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 16px; }
+  .confidence-badge {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    padding: 2px 8px; border-radius: 99px;
+    background: rgba(61,153,112,0.25); color: var(--on-track);
+    align-self: flex-start;
+  }
+
+  .quick-tags {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .quick-tag {
+    padding: 6px 14px; border-radius: 99px;
+    font-size: 13px; cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    transition: background 0.1s, border-color 0.1s;
+  }
+  .quick-tag:hover { border-color: var(--sleep); }
+  .quick-tag.sleep-tag   { border-color: var(--sleep);    background: rgba(92,75,204,0.15); }
+  .quick-tag.study-tag   { border-color: var(--study);    background: rgba(232,96,76,0.15); }
+  .quick-tag.sched-tag   { border-color: var(--schedule); background: rgba(245,166,35,0.12);}
+
+  .add-btn {
+    background: var(--sleep);
+    color: #fff; border: none;
+    border-radius: 14px; padding: 14px;
+    font-size: 16px; font-weight: 700;
+    cursor: pointer; text-align: center;
+    transition: opacity 0.15s;
+  }
+  .add-btn:hover { opacity: 0.85; }
+
+  /* FAB */
+  .fab {
+    position: absolute;
+    bottom: 94px; right: 20px;
+    width: 52px; height: 52px;
+    background: var(--sleep);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; color: #fff;
+    cursor: pointer; z-index: 90;
+    box-shadow: 0 4px 20px rgba(92,75,204,0.5);
+    transition: transform 0.15s, box-shadow 0.15s;
+    user-select: none;
+  }
+  .fab:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(92,75,204,0.65); }
+  .fab.open { transform: rotate(45deg); background: var(--surface2); box-shadow: none; }
+
+  /* ══════════════════════════════════════
+     GOALS SCREEN
+  ══════════════════════════════════════ */
+  .goals-screen { padding: 0 20px 20px; }
+
+  .week-strip {
+    display: flex; gap: 6px; margin-bottom: 20px;
+  }
+  .week-day {
+    flex: 1; text-align: center;
+    padding: 8px 0; border-radius: 10px;
+    font-size: 11px; cursor: pointer;
+  }
+  .week-day .wd-label { color: var(--sub); font-weight: 500; margin-bottom: 4px; }
+  .week-day .wd-num   { font-size: 15px; font-weight: 700; }
+  .week-day.today     { background: var(--sleep); }
+  .week-day.today .wd-label { color: rgba(255,255,255,0.7); }
+  .week-day.has-dot::after {
+    content: '•'; display: block; color: var(--on-track); font-size: 16px; line-height: 1;
+  }
+
+  .goal-card {
+    background: var(--surface);
+    border-radius: 18px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+  .goal-card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .goal-domain-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .goal-card-title { font-size: 16px; font-weight: 700; flex: 1; }
+  .goal-status-chip {
+    font-size: 11px; font-weight: 700; padding: 3px 10px;
+    border-radius: 99px;
+  }
+  .chip-green { background: rgba(61,153,112,0.2); color: var(--on-track); }
+  .chip-red   { background: rgba(232,64,64,0.2);  color: var(--behind); }
+  .chip-amber { background: rgba(245,166,35,0.2); color: var(--schedule); }
+
+  /* Ring chart */
+  .ring-row { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; }
+  .ring-wrap { position: relative; width: 72px; height: 72px; flex-shrink: 0; }
+  .ring-wrap svg { width: 72px; height: 72px; transform: rotate(-90deg); }
+  .ring-center {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 800;
+    line-height: 1;
+  }
+  .ring-pct-sub { font-size: 9px; color: var(--sub); font-weight: 500; }
+
+  .ring-stat-list { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+  .ring-stat { font-size: 13px; color: var(--sub); }
+  .ring-stat span { color: var(--text); font-weight: 600; }
+
+  /* Progress bar rows */
+  .prog-row { margin-bottom: 10px; }
+  .prog-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
+  .prog-label  { font-size: 13px; font-weight: 500; }
+  .prog-meta   { font-size: 12px; color: var(--sub); }
+  .prog-bar    { height: 6px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+  .prog-fill   { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+  .divider { height: 1px; background: var(--border); margin: 12px 0; }
+
+  /* ══════════════════════════════════════
+     STATS SCREEN
+  ══════════════════════════════════════ */
+  .stats-tabs {
+    display: flex; gap: 0;
+    background: var(--surface2);
+    border-radius: 12px; padding: 3px;
+    margin: 0 20px 16px;
+  }
+  .stats-tab {
+    flex: 1; text-align: center; padding: 8px 0;
+    font-size: 13px; font-weight: 600;
+    border-radius: 10px; cursor: pointer;
+    color: var(--sub); transition: background 0.15s, color 0.15s;
+  }
+  .stats-tab.active { background: var(--surface); color: var(--text); }
+
+  .stats-content { padding: 0 20px; }
+
+  /* Hypnogram */
+  .hypnogram-card {
+    background: var(--surface); border-radius: 18px;
+    padding: 16px; margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+  .chart-title { font-size: 13px; color: var(--sub); margin-bottom: 12px; font-weight: 600; }
+
+  /* Study heatmap */
+  .heatmap-grid {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 3px;
+    margin-top: 8px;
+  }
+  .hm-cell {
+    aspect-ratio: 1; border-radius: 3px;
+    background: var(--surface2);
+  }
+  .hm-0 { background: var(--surface2); }
+  .hm-1 { background: rgba(232,96,76,0.25); }
+  .hm-2 { background: rgba(232,96,76,0.45); }
+  .hm-3 { background: rgba(232,96,76,0.70); }
+  .hm-4 { background: var(--study); }
+
+  .stat-row {
+    display: flex; gap: 10px; margin-bottom: 12px;
+  }
+  .stat-chip {
+    flex: 1; background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 12px;
+    text-align: center;
+  }
+  .stat-chip-num  { font-size: 22px; font-weight: 800; margin-bottom: 2px; }
+  .stat-chip-label{ font-size: 11px; color: var(--sub); }
+
+  /* Sleep bars */
+  .sleep-bar-chart { margin-top: 8px; }
+  .sleep-bar-row {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 5px;
+  }
+  .sleep-bar-label { font-size: 11px; color: var(--sub); width: 24px; text-align: right; }
+  .sleep-bar-track { flex: 1; height: 18px; background: var(--surface2); border-radius: 4px; overflow: hidden; position: relative; }
+  .sleep-bar-fill  { height: 100%; border-radius: 4px; position: absolute; }
+  .sleep-bar-num   { font-size: 11px; color: var(--sub); width: 32px; }
+
+  /* ══════════════════════════════════════
+     WEEK SCREEN
+  ══════════════════════════════════════ */
+  .week-grid-container { padding: 0 12px; }
+  .week-grid-header {
+    display: grid; grid-template-columns: 28px repeat(7,1fr);
+    gap: 4px; margin-bottom: 6px;
+  }
+  .wg-day-head { text-align: center; font-size: 11px; color: var(--sub); font-weight: 600; }
+  .wg-today-head { color: var(--text); }
+
+  .week-grid-body {
+    display: grid; grid-template-columns: 28px repeat(7,1fr);
+    gap: 4px;
+  }
+  .wg-hour-label { font-size: 10px; color: var(--sub); text-align: right; padding-top: 2px; }
+  .wg-cell {
+    min-height: 28px; border-radius: 6px;
+    background: var(--surface2);
+    position: relative; overflow: hidden;
+  }
+  .wg-block {
+    border-radius: 5px; padding: 2px 4px;
+    font-size: 9px; font-weight: 600; line-height: 1.3;
+    overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+  }
+  .wg-sleep    { background: rgba(92,75,204,0.55);  color: #fff; }
+  .wg-study    { background: rgba(232,96,76,0.65);  color: #fff; }
+  .wg-schedule { background: rgba(245,166,35,0.55); color: #fff; }
+
+  /* ══════════════════════════════════════
+     SHARED UTILS
+  ══════════════════════════════════════ */
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 10px; border-radius: 99px; font-size: 12px;
+  }
+  .pill.sleep-pill   { background: rgba(92,75,204,0.25); color: var(--sleep); }
+  .pill.study-pill   { background: rgba(232,96,76,0.25); color: var(--study); }
+  .pill.sched-pill   { background: rgba(245,166,35,0.25); color: var(--schedule); }
+
+  .section-label {
+    font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--sub); margin-bottom: 10px; font-weight: 600;
+  }
+
+  /* Screen switcher header tabs */
+  .screen-tabs {
+    display: flex; gap: 6px; padding: 8px 20px 0;
+    overflow-x: auto; flex-shrink: 0;
+  }
+  .screen-tabs::-webkit-scrollbar { display: none; }
+  .screen-tab {
+    font-size: 12px; padding: 5px 14px; border-radius: 99px;
+    cursor: pointer; white-space: nowrap; border: 1px solid var(--border);
+    background: var(--surface2); color: var(--sub);
+    transition: all 0.15s;
+  }
+  .screen-tab.active { background: var(--sleep); color: #fff; border-color: var(--sleep); }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 16px; padding: 0 20px;
+    margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--sub); }
+  .legend-dot  { width: 8px; height: 8px; border-radius: 50%; }
+
+  /* Reflection */
+  .reflection-area {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; font-size: 14px;
+    color: var(--sub); min-height: 60px; line-height: 1.5;
+    font-family: inherit;
+  }
+
+  /* Morning reveal */
+  .reveal-hero {
+    text-align: center; padding: 32px 20px 20px;
+  }
+  .reveal-hero .big-time { font-size: 56px; font-weight: 800; letter-spacing: -2px; }
+  .reveal-hero .big-label { font-size: 15px; color: var(--sub); margin-top: 4px; }
+  .score-row {
+    display: flex; gap: 12px; padding: 0 20px; margin-bottom: 16px;
+  }
+  .score-card {
+    flex: 1; background: var(--surface); border-radius: 16px;
+    padding: 14px; border: 1px solid var(--border); text-align: center;
+  }
+  .score-card .sc-num   { font-size: 28px; font-weight: 800; }
+  .score-card .sc-label { font-size: 11px; color: var(--sub); margin-top: 2px; }
+
+  /* ── outer layout label ── */
+  .phone-label {
+    font-size: 11px; color: var(--sub);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-top: 8px; text-align: center;
+  }
+
+  /* ── multi-phone row ── */
+  .phones-row {
+    display: flex; gap: 20px; flex-wrap: wrap; justify-content: center;
+  }
+  .phone-col { display: flex; flex-direction: column; align-items: center; }
+
+  /* NLP flow diagram */
+  .nlp-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px; max-width: 700px;
+    width: 100%;
+  }
+  .nlp-diagram h2 { font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+  .flow-row {
+    display: flex; align-items: stretch; gap: 0;
+    margin-bottom: 0;
+  }
+  .flow-node {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 16px; text-align: center;
+  }
+  .flow-node .fn-icon { font-size: 24px; margin-bottom: 6px; }
+  .flow-node .fn-title { font-size: 13px; font-weight: 700; margin-bottom: 3px; }
+  .flow-node .fn-detail { font-size: 11px; color: var(--sub); line-height: 1.4; }
+  .flow-arrow {
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 8px; color: var(--sub); font-size: 18px;
+  }
+  .flow-note {
+    font-size: 11px; color: var(--sub); text-align: center;
+    margin-top: 12px; line-height: 1.6; border-top: 1px solid var(--border); padding-top: 12px;
+  }
+  .flow-note code { background: var(--surface2); padding: 1px 6px; border-radius: 4px; color: var(--text); font-size: 11px; }
+</style>
+</head>
+<body>
+
+<h1>Planner — Interactive UI Mockup</h1>
+
+<div class="phones-row">
+
+  <!-- ══════════ PHONE 1 — TODAY ══════════ -->
+  <div class="phone-col">
+    <div class="phone" id="phone-today">
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="notch"></div>
+        <div class="status-icons">
+          <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+          <span>100%</span>
+        </div>
+      </div>
+
+      <!-- Tab strip -->
+      <div class="screen-tabs">
+        <div class="screen-tab active" onclick="switchTab('today-scr','phone-today',this)">Today</div>
+        <div class="screen-tab" onclick="switchTab('week-scr','phone-today',this)">Week</div>
+        <div class="screen-tab" onclick="switchTab('stats-scr','phone-today',this)">Stats</div>
+        <div class="screen-tab" onclick="switchTab('goals-scr','phone-today',this)">Goals</div>
+        <div class="screen-tab" onclick="switchTab('reveal-scr','phone-today',this)">Morning</div>
+      </div>
+
+      <!-- ── TODAY SCREEN ── -->
+      <div class="screen active" id="today-scr">
+        <div class="screen-header">
+          <div>
+            <div class="screen-title">Thursday</div>
+            <div class="screen-date">May 15 · Week 20</div>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <span class="pill sleep-pill">😴 7h 20m</span>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--sleep)"></div>Sleep</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--study)"></div>Study</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--schedule)"></div>Schedule</div>
+        </div>
+
+        <div class="timeline">
+          <!-- 7am -->
+          <div class="timeline-hour">
+            <div class="hour-label">7 am</div>
+            <div class="hour-track">
+              <div class="t-block sleep" style="height:52px">
+                <div class="t-block-row">
+                  <span class="t-block-icon">🌙</span>
+                  <div>
+                    <div class="t-block-title">Sleep</div>
+                    <div class="t-block-meta">11:40 pm → 7:00 am · 7h 20m · 82 score</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8am -->
+          <div class="timeline-hour">
+            <div class="hour-label">8 am</div>
+            <div class="hour-track">
+              <div class="t-block schedule">
+                <div class="t-block-row">
+                  <span class="t-block-icon">🏃</span>
+                  <div>
+                    <div class="t-block-title">Morning Run</div>
+                    <div class="t-block-meta">8:00 – 8:45 am · 45 min</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 9am -->
+          <div class="timeline-hour">
+            <div class="hour-label">9 am</div>
+            <div class="hour-track">
+              <div class="t-block study">
+                <div class="t-block-row">
+                  <span class="t-block-icon">📐</span>
+                  <div>
+                    <div class="t-block-title">Calculus</div>
+                    <div class="t-block-meta">9:00 – 10:30 am · 90 min</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10am -->
+          <div class="timeline-hour">
+            <div class="hour-label">10 am</div>
+            <div class="hour-track"></div>
+          </div>
+
+          <!-- 11am -->
+          <div class="timeline-hour">
+            <div class="hour-label">11 am</div>
+            <div class="hour-track">
+              <div class="t-block study">
+                <div class="t-block-row">
+                  <span class="t-block-icon">🔬</span>
+                  <div>
+                    <div class="t-block-title">Biology</div>
+                    <div class="t-block-meta">11:00 am – 1:00 pm · 2 hr</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 12pm -->
+          <div class="timeline-hour">
+            <div class="hour-label">12 pm</div>
+            <div class="hour-track"></div>
+          </div>
+
+          <!-- NOW LINE -->
+          <div class="now-line">
+            <div class="now-dot"></div>
+            <div class="now-rule"></div>
+            <div class="now-time">1:24 pm</div>
+          </div>
+
+          <!-- 1pm -->
+          <div class="timeline-hour">
+            <div class="hour-label">1 pm</div>
+            <div class="hour-track">
+              <div class="t-block schedule">
+                <div class="t-block-row">
+                  <span class="t-block-icon">🍱</span>
+                  <div>
+                    <div class="t-block-title">Lunch</div>
+                    <div class="t-block-meta">1:00 – 1:30 pm · 30 min</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2pm -->
+          <div class="timeline-hour">
+            <div class="hour-label">2 pm</div>
+            <div class="hour-track">
+              <div class="t-block study">
+                <div class="t-block-row">
+                  <span class="t-block-icon">🌍</span>
+                  <div>
+                    <div class="t-block-title">Spanish</div>
+                    <div class="t-block-meta">2:00 – 3:00 pm · 1 hr</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3pm -->
+          <div class="timeline-hour">
+            <div class="hour-label">3 pm</div>
+            <div class="hour-track"></div>
+          </div>
+
+          <!-- 4pm -->
+          <div class="timeline-hour">
+            <div class="hour-label">4 pm</div>
+            <div class="hour-track">
+              <div class="t-block schedule">
+                <div class="t-block-row">
+                  <span class="t-block-icon">🏋️</span>
+                  <div>
+                    <div class="t-block-title">Gym</div>
+                    <div class="t-block-meta">4:00 – 5:00 pm · 60 min</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 10pm -->
+          <div class="timeline-hour" style="margin-top:12px;">
+            <div class="hour-label">10 pm</div>
+            <div class="hour-track">
+              <div class="t-block sleep">
+                <div class="t-block-row">
+                  <span class="t-block-icon">🌙</span>
+                  <div>
+                    <div class="t-block-title">Bedtime</div>
+                    <div class="t-block-meta">Target 10:30 pm</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WEEK SCREEN ── -->
+      <div class="screen" id="week-scr">
+        <div class="screen-header">
+          <div class="screen-title">Week 20</div>
+          <div class="screen-date">May 12 – 18</div>
+        </div>
+        <div class="week-grid-container">
+          <div class="week-grid-header">
+            <div></div>
+            <div class="wg-day-head">M</div>
+            <div class="wg-day-head">T</div>
+            <div class="wg-day-head">W</div>
+            <div class="wg-day-head wg-today-head" style="color:var(--sleep)">Th</div>
+            <div class="wg-day-head">F</div>
+            <div class="wg-day-head">Sa</div>
+            <div class="wg-day-head">Su</div>
+          </div>
+          <div class="week-grid-body" id="wg-body"></div>
+        </div>
+      </div>
+
+      <!-- ── STATS SCREEN ── -->
+      <div class="screen" id="stats-scr">
+        <div class="screen-header">
+          <div class="screen-title">Stats</div>
+        </div>
+        <div class="stats-tabs">
+          <div class="stats-tab active" onclick="switchStat(this,'stat-sleep')">Sleep</div>
+          <div class="stats-tab" onclick="switchStat(this,'stat-study')">Study</div>
+          <div class="stats-tab" onclick="switchStat(this,'stat-days')">Days</div>
+        </div>
+        <div class="stats-content">
+          <!-- SLEEP STATS -->
+          <div id="stat-sleep">
+            <div class="stat-row">
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--sleep)">7h 20m</div><div class="stat-chip-label">Last night</div></div>
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--sleep)">7h 12m</div><div class="stat-chip-label">7-day avg</div></div>
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--on-track)">82</div><div class="stat-chip-label">Score</div></div>
+            </div>
+            <div class="hypnogram-card">
+              <div class="chart-title">SLEEP STAGES — LAST NIGHT</div>
+              <!-- Hypnogram SVG (simplified) -->
+              <svg width="100%" height="80" viewBox="0 0 300 80">
+                <defs>
+                  <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#5C4BCC" stop-opacity="0.5"/>
+                    <stop offset="100%" stop-color="#5C4BCC" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <!-- Stage lines: Awake=10, REM=25, Light=50, Deep=68 -->
+                <polyline points="0,10 15,10 15,50 40,50 40,68 80,68 80,50 110,50 110,25 140,25 140,50 170,50 170,25 200,25 200,50 230,50 230,68 255,68 255,50 280,50 280,25 300,25" fill="none" stroke="#5C4BCC" stroke-width="2"/>
+                <polygon points="0,10 15,10 15,50 40,50 40,68 80,68 80,50 110,50 110,25 140,25 140,50 170,50 170,25 200,25 200,50 230,50 230,68 255,68 255,50 280,50 280,25 300,25 300,80 0,80" fill="url(#sg)"/>
+                <!-- Stage labels -->
+                <text x="2" y="8"  fill="#8888AA" font-size="7">Awake</text>
+                <text x="2" y="23" fill="#8888AA" font-size="7">REM</text>
+                <text x="2" y="48" fill="#8888AA" font-size="7">Light</text>
+                <text x="2" y="67" fill="#8888AA" font-size="7">Deep</text>
+                <!-- Time labels -->
+                <text x="20" y="79" fill="#8888AA" font-size="7">11 pm</text>
+                <text x="120" y="79" fill="#8888AA" font-size="7">2 am</text>
+                <text x="220" y="79" fill="#8888AA" font-size="7">5 am</text>
+                <text x="270" y="79" fill="#8888AA" font-size="7">7 am</text>
+              </svg>
+            </div>
+            <div class="hypnogram-card">
+              <div class="chart-title">DURATION — LAST 7 NIGHTS</div>
+              <div class="sleep-bar-chart">
+                <div class="sleep-bar-row"><div class="sleep-bar-label">Su</div><div class="sleep-bar-track"><div class="sleep-bar-fill" style="width:82%;background:var(--sleep)"></div></div><div class="sleep-bar-num">6h 30m</div></div>
+                <div class="sleep-bar-row"><div class="sleep-bar-label">Mo</div><div class="sleep-bar-track"><div class="sleep-bar-fill" style="width:94%;background:var(--sleep)"></div></div><div class="sleep-bar-num">7h 30m</div></div>
+                <div class="sleep-bar-row"><div class="sleep-bar-label">Tu</div><div class="sleep-bar-track"><div class="sleep-bar-fill" style="width:88%;background:var(--sleep)"></div></div><div class="sleep-bar-num">7h 00m</div></div>
+                <div class="sleep-bar-row"><div class="sleep-bar-label">We</div><div class="sleep-bar-track"><div class="sleep-bar-fill" style="width:91%;background:var(--sleep)"></div></div><div class="sleep-bar-num">7h 15m</div></div>
+                <div class="sleep-bar-row"><div class="sleep-bar-label" style="color:var(--text);font-weight:700">Th</div><div class="sleep-bar-track"><div class="sleep-bar-fill" style="width:92%;background:var(--sleep)"></div></div><div class="sleep-bar-num" style="color:var(--text)">7h 20m</div></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- STUDY STATS -->
+          <div id="stat-study" style="display:none">
+            <div class="stat-row">
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--study)">3h 30m</div><div class="stat-chip-label">Today</div></div>
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--study)">18h 45m</div><div class="stat-chip-label">This week</div></div>
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--on-track)">12🔥</div><div class="stat-chip-label">Streak</div></div>
+            </div>
+            <div class="hypnogram-card">
+              <div class="chart-title">STUDY HEATMAP — LAST 13 WEEKS</div>
+              <div class="heatmap-grid" id="heatmap"></div>
+              <div style="display:flex;gap:4px;align-items:center;margin-top:8px;font-size:11px;color:var(--sub)">
+                Less <div class="hm-cell hm-0" style="width:12px;height:12px;border-radius:2px;display:inline-block"></div>
+                <div class="hm-cell hm-1" style="width:12px;height:12px;border-radius:2px;display:inline-block"></div>
+                <div class="hm-cell hm-2" style="width:12px;height:12px;border-radius:2px;display:inline-block"></div>
+                <div class="hm-cell hm-3" style="width:12px;height:12px;border-radius:2px;display:inline-block"></div>
+                <div class="hm-cell hm-4" style="width:12px;height:12px;border-radius:2px;display:inline-block"></div> More
+              </div>
+            </div>
+            <div class="hypnogram-card">
+              <div class="chart-title">BY SUBJECT — THIS WEEK</div>
+              <div class="prog-row"><div class="prog-header"><div class="prog-label">📐 Calculus</div><div class="prog-meta">6h / 8h target</div></div><div class="prog-bar"><div class="prog-fill" style="width:75%;background:var(--study)"></div></div></div>
+              <div class="prog-row"><div class="prog-header"><div class="prog-label">🔬 Biology</div><div class="prog-meta">7h / 6h target</div></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--on-track)"></div></div></div>
+              <div class="prog-row"><div class="prog-header"><div class="prog-label">🌍 Spanish</div><div class="prog-meta">4h / 5h target</div></div><div class="prog-bar"><div class="prog-fill" style="width:80%;background:var(--study)"></div></div></div>
+              <div class="prog-row"><div class="prog-header"><div class="prog-label">💻 CS</div><div class="prog-meta">1h 45m / 4h target</div></div><div class="prog-bar"><div class="prog-fill" style="width:44%;background:var(--behind)"></div></div></div>
+            </div>
+          </div>
+
+          <!-- DAYS STATS -->
+          <div id="stat-days" style="display:none">
+            <div class="stat-row">
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--schedule)">78%</div><div class="stat-chip-label">Schedule hit rate</div></div>
+              <div class="stat-chip"><div class="stat-chip-num" style="color:var(--on-track)">21</div><div class="stat-chip-label">Perfect days</div></div>
+            </div>
+            <div class="hypnogram-card">
+              <div class="chart-title">COMPLETION — LAST 4 WEEKS</div>
+              <svg width="100%" height="80" viewBox="0 0 300 80">
+                <rect x="10"  y="20" width="24" height="56" rx="4" fill="rgba(245,166,35,0.7)"/>
+                <rect x="50"  y="35" width="24" height="41" rx="4" fill="rgba(245,166,35,0.5)"/>
+                <rect x="90"  y="12" width="24" height="64" rx="4" fill="rgba(245,166,35,0.8)"/>
+                <rect x="130" y="28" width="24" height="48" rx="4" fill="rgba(245,166,35,0.6)"/>
+                <rect x="170" y="16" width="24" height="60" rx="4" fill="rgba(245,166,35,0.75)"/>
+                <rect x="210" y="40" width="24" height="36" rx="4" fill="rgba(245,166,35,0.45)"/>
+                <rect x="250" y="10" width="24" height="66" rx="4" fill="rgba(61,153,112,0.8)"/>
+                <text x="10"  y="78" fill="#8888AA" font-size="8">W17</text>
+                <text x="50"  y="78" fill="#8888AA" font-size="8">W18</text>
+                <text x="90"  y="78" fill="#8888AA" font-size="8">W19</text>
+                <text x="250" y="78" fill="#8888AA" font-size="8">W20</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── GOALS SCREEN ── -->
+      <div class="screen" id="goals-scr">
+        <div class="screen-header">
+          <div class="screen-title">Goals</div>
+          <div class="screen-date">Week 20</div>
+        </div>
+        <div class="goals-screen">
+          <div class="week-strip">
+            <div class="week-day has-dot"><div class="wd-label">M</div><div class="wd-num">12</div></div>
+            <div class="week-day has-dot"><div class="wd-label">T</div><div class="wd-num">13</div></div>
+            <div class="week-day has-dot"><div class="wd-label">W</div><div class="wd-num">14</div></div>
+            <div class="week-day today"><div class="wd-label">Th</div><div class="wd-num">15</div></div>
+            <div class="week-day"><div class="wd-label">F</div><div class="wd-num">16</div></div>
+            <div class="week-day"><div class="wd-label">S</div><div class="wd-num">17</div></div>
+            <div class="week-day"><div class="wd-label">S</div><div class="wd-num">18</div></div>
+          </div>
+
+          <!-- Sleep Goal Card -->
+          <div class="goal-card">
+            <div class="goal-card-header">
+              <div class="goal-domain-dot" style="background:var(--sleep)"></div>
+              <div class="goal-card-title">Sleep</div>
+              <div class="goal-status-chip chip-green">ON TRACK</div>
+            </div>
+            <div class="ring-row">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 72 72">
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#2E2E3E" stroke-width="8"/>
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#5C4BCC" stroke-width="8"
+                    stroke-dasharray="157" stroke-dashoffset="34" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-center" style="color:var(--sleep)">78%<div class="ring-pct-sub">of goal</div></div>
+              </div>
+              <div class="ring-stat-list">
+                <div class="ring-stat">Nightly target: <span>8h 00m</span></div>
+                <div class="ring-stat">Avg this week: <span>7h 12m</span></div>
+                <div class="ring-stat">Bedtime target: <span>10:30 pm</span></div>
+                <div class="ring-stat">Sleep debt: <span style="color:var(--behind)">– 48 min</span></div>
+              </div>
+            </div>
+            <div class="section-label">Regularity score</div>
+            <div class="prog-bar" style="height:8px"><div class="prog-fill" style="width:85%;background:var(--sleep)"></div></div>
+            <div style="font-size:11px;color:var(--sub);margin-top:4px">85 / 100 — consistent wake time ✓</div>
+          </div>
+
+          <!-- Study Goal Card -->
+          <div class="goal-card">
+            <div class="goal-card-header">
+              <div class="goal-domain-dot" style="background:var(--study)"></div>
+              <div class="goal-card-title">Study</div>
+              <div class="goal-status-chip chip-amber">4 DAYS LEFT</div>
+            </div>
+            <div class="ring-row">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 72 72">
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#2E2E3E" stroke-width="8"/>
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#E8604C" stroke-width="8"
+                    stroke-dasharray="157" stroke-dashoffset="52" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-center" style="color:var(--study)">67%<div class="ring-pct-sub">of goal</div></div>
+              </div>
+              <div class="ring-stat-list">
+                <div class="ring-stat">Weekly target: <span>25h</span></div>
+                <div class="ring-stat">Done so far: <span>16h 45m</span></div>
+                <div class="ring-stat">Remaining: <span>8h 15m</span></div>
+                <div class="ring-stat">Streak: <span style="color:var(--on-track)">12 days 🔥</span></div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="section-label">By subject</div>
+            <div class="prog-row"><div class="prog-header"><div class="prog-label">📐 Calculus</div><div class="prog-meta">6h / 8h</div></div><div class="prog-bar"><div class="prog-fill" style="width:75%;background:var(--study)"></div></div></div>
+            <div class="prog-row"><div class="prog-header"><div class="prog-label">🔬 Biology</div><div class="prog-meta">7h / 6h ✓</div></div><div class="prog-bar"><div class="prog-fill" style="width:100%;background:var(--on-track)"></div></div></div>
+            <div class="prog-row"><div class="prog-header"><div class="prog-label">💻 CS</div><div class="prog-meta">1h 45m / 4h</div></div><div class="prog-bar"><div class="prog-fill" style="width:44%;background:var(--behind)"></div></div></div>
+          </div>
+
+          <!-- Schedule Goal Card -->
+          <div class="goal-card">
+            <div class="goal-card-header">
+              <div class="goal-domain-dot" style="background:var(--schedule)"></div>
+              <div class="goal-card-title">Schedule</div>
+              <div class="goal-status-chip chip-green">ON TRACK</div>
+            </div>
+            <div class="ring-row">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 72 72">
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#2E2E3E" stroke-width="8"/>
+                  <circle cx="36" cy="36" r="30" fill="none" stroke="#F5A623" stroke-width="8"
+                    stroke-dasharray="157" stroke-dashoffset="25" stroke-linecap="round"/>
+                </svg>
+                <div class="ring-center" style="color:var(--schedule)">84%<div class="ring-pct-sub">completed</div></div>
+              </div>
+              <div class="ring-stat-list">
+                <div class="ring-stat">Blocks done: <span>31 / 37</span></div>
+                <div class="ring-stat">Anchor habits: <span>5 / 6</span></div>
+              </div>
+            </div>
+            <div class="divider"></div>
+            <div class="section-label">Weekly reflection</div>
+            <div class="reflection-area">Solid week so far. CS sessions keep slipping — need to block 2h on Friday evening...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MORNING REVEAL SCREEN ── -->
+      <div class="screen" id="reveal-scr">
+        <div class="reveal-hero">
+          <div style="font-size:48px;margin-bottom:8px">🌅</div>
+          <div class="big-time" style="color:var(--sleep)">7h 20m</div>
+          <div class="big-label">last night's sleep</div>
+          <div style="margin-top:16px;display:flex;justify-content:center;gap:12px">
+            <span class="pill sleep-pill">Score 82</span>
+            <span class="pill sleep-pill">REM 22%</span>
+            <span class="pill sleep-pill">Deep 18%</span>
+          </div>
+        </div>
+        <div class="score-row">
+          <div class="score-card"><div class="sc-num" style="color:var(--sleep)">82</div><div class="sc-label">Sleep score</div></div>
+          <div class="score-card"><div class="sc-num" style="color:var(--on-track)">+4</div><div class="sc-label">vs last week avg</div></div>
+          <div class="score-card"><div class="sc-num" style="color:var(--schedule)">6:58</div><div class="sc-label">Wake time</div></div>
+        </div>
+        <div style="padding:0 20px">
+          <div class="hypnogram-card">
+            <div class="chart-title">TONIGHT'S PLAN</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div class="prog-row"><div class="prog-header"><div class="prog-label">📐 Calculus</div><div class="prog-meta">2h remaining</div></div><div class="prog-bar"><div class="prog-fill" style="width:55%;background:var(--study)"></div></div></div>
+              <div class="prog-row"><div class="prog-header"><div class="prog-label">💻 CS</div><div class="prog-meta">2h 15m remaining</div></div><div class="prog-bar"><div class="prog-fill" style="width:44%;background:var(--behind)"></div></div></div>
+            </div>
+            <div style="margin-top:14px;text-align:center">
+              <div class="add-btn" style="padding:10px;font-size:14px;border-radius:10px;background:var(--sleep)">
+                Build today's schedule →
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAB + Quick-Add Sheet -->
+      <div class="fab" id="fab-today" onclick="toggleSheet('sheet-today','fab-today')">+</div>
+
+      <div class="sheet-overlay" id="sheet-today">
+        <div class="sheet-handle"></div>
+        <div class="sheet-title">Quick Add</div>
+        <div class="nlp-input-wrap">
+          <span style="font-size:18px">✨</span>
+          <input type="text" id="nlp-inp" placeholder="Biology 2hrs at 3pm…" value="Biology 2hrs at 3pm" oninput="onNlpInput(this.value)"/>
+          <span class="mic-btn">🎙️</span>
+        </div>
+        <!-- Parsed result -->
+        <div class="parse-result" id="parse-result">
+          <div class="parsed-icon">📖</div>
+          <div style="flex:1">
+            <div class="parse-grid">
+              <div><div class="parse-key">TITLE</div><div class="parse-value" id="pr-title">Biology</div></div>
+              <div><div class="parse-key">START</div><div class="parse-value" id="pr-start">3:00 pm</div></div>
+              <div><div class="parse-key">DURATION</div><div class="parse-value" id="pr-dur">2h 00m</div></div>
+              <div><div class="parse-key">DOMAIN</div><div class="parse-value" id="pr-domain">Study 📚</div></div>
+            </div>
+          </div>
+          <div class="confidence-badge" id="pr-conf">HIGH ✓</div>
+        </div>
+        <!-- Quick tags -->
+        <div>
+          <div class="section-label">Recents</div>
+          <div class="quick-tags">
+            <div class="quick-tag study-tag" onclick="setNlp('Calculus 1hr')">📐 Calculus</div>
+            <div class="quick-tag study-tag" onclick="setNlp('Biology 2hrs at 3pm')">🔬 Biology</div>
+            <div class="quick-tag study-tag" onclick="setNlp('Spanish 30min')">🌍 Spanish</div>
+            <div class="quick-tag sleep-tag" onclick="setNlp('Bedtime 10:30pm')">🌙 Bedtime</div>
+            <div class="quick-tag sched-tag" onclick="setNlp('Gym 1hr tomorrow')">🏋️ Gym</div>
+          </div>
+        </div>
+        <div class="add-btn" onclick="toggleSheet('sheet-today','fab-today')">Add to schedule</div>
+      </div>
+
+      <!-- Bottom Nav -->
+      <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('today-scr','phone-today',null);setActiveNav(this)">
+          <div class="nav-icon">📅</div><div class="nav-label">Today</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('week-scr','phone-today',null);setActiveNav(this)">
+          <div class="nav-icon">📆</div><div class="nav-label">Week</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('stats-scr','phone-today',null);setActiveNav(this)">
+          <div class="nav-icon">📊</div><div class="nav-label">Stats</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('goals-scr','phone-today',null);setActiveNav(this)">
+          <div class="nav-icon">🎯</div><div class="nav-label">Goals</div>
+        </div>
+        <div class="nav-item" onclick="switchTab('reveal-scr','phone-today',null);setActiveNav(this)">
+          <div class="nav-icon">⚙️</div><div class="nav-label">More</div>
+        </div>
+      </div>
+    </div>
+    <div class="phone-label">Tap tabs or nav to explore</div>
+  </div>
+
+</div><!-- /phones-row -->
+
+<!-- NLP Architecture diagram -->
+<div class="nlp-diagram">
+  <h2>⚡ How Natural Language Quick-Add Works</h2>
+  <div class="flow-row">
+    <div class="flow-node">
+      <div class="fn-icon">🎙️</div>
+      <div class="fn-title">User input</div>
+      <div class="fn-detail">"Biology 2hrs at 3pm"<br>typed or spoken</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">
+      <div class="fn-icon">⚡</div>
+      <div class="fn-title">Claude Haiku 4.5</div>
+      <div class="fn-detail">Fast inference<br>~$0.001 / parse<br>&lt;200 ms</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">
+      <div class="fn-icon">🔒</div>
+      <div class="fn-title">JSON Schema output</div>
+      <div class="fn-detail">Guaranteed structure<br>via output_config<br>.format</div>
+    </div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node">
+      <div class="fn-icon">📅</div>
+      <div class="fn-title">ScheduleBlock</div>
+      <div class="fn-detail">title · startTime<br>duration · domain<br>icon · confidence</div>
+    </div>
+  </div>
+  <div class="flow-note">
+    <strong>Prompt cache strategy:</strong> stable <code>SYSTEM_PROMPT</code> is always cached — only <code>nowIso</code> + <code>recentSubjects</code> vary per request (injected in the user turn), so the cached prefix is never invalidated.<br>
+    Output constrained via <code>output_config: { format: { type: "json_schema", schema: SCHEMA } }</code> — no markdown fences, no prose, pure JSON every time.
+  </div>
+</div>
+
+<script>
+// ── Screen switching ──
+function switchTab(screenId, phoneId, tabEl) {
+  const phone = document.getElementById(phoneId);
+  phone.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(screenId).classList.add('active');
+  if (tabEl) {
+    phone.querySelectorAll('.screen-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+  }
+}
+
+function setActiveNav(el) {
+  el.closest('.bottom-nav').querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function switchStat(tabEl, contentId) {
+  tabEl.closest('.stats-content').querySelectorAll('[id^="stat-"]').forEach(s => s.style.display='none');
+  document.getElementById(contentId).style.display='block';
+  tabEl.closest('.stats-tabs').querySelectorAll('.stats-tab').forEach(t => t.classList.remove('active'));
+  tabEl.classList.add('active');
+}
+
+// ── Quick-Add Sheet ──
+function toggleSheet(sheetId, fabId) {
+  const sheet = document.getElementById(sheetId);
+  const fab   = document.getElementById(fabId);
+  const open  = sheet.classList.toggle('visible');
+  fab.classList.toggle('open', open);
+  fab.textContent = open ? '×' : '+';
+}
+
+// ── NLP live preview ──
+const NLP_RULES = [
+  { re: /calculus/i,  icon:'📐', title:'Calculus',  domain:'Study 📚', start:'9:00 am',  dur:'1h 30m' },
+  { re: /biology/i,   icon:'🔬', title:'Biology',   domain:'Study 📚', start:'3:00 pm',  dur:'2h 00m' },
+  { re: /spanish/i,   icon:'🌍', title:'Spanish',   domain:'Study 📚', start:'2:00 pm',  dur:'1h 00m' },
+  { re: /gym|workout/i,icon:'🏋️',title:'Gym',      domain:'Schedule 📋',start:'4:00 pm',dur:'1h 00m' },
+  { re: /run|jog/i,   icon:'🏃', title:'Run',       domain:'Schedule 📋',start:'8:00 am',dur:'45 min' },
+  { re: /lunch/i,     icon:'🍱', title:'Lunch',     domain:'Schedule 📋',start:'1:00 pm',dur:'30 min' },
+  { re: /bed|sleep/i, icon:'🌙', title:'Bedtime',   domain:'Sleep 😴',  start:'10:30 pm',dur:'8h 00m' },
+  { re: /cs|coding/i, icon:'💻', title:'CS',        domain:'Study 📚',  start:'7:00 pm', dur:'2h 00m' },
+];
+
+function parseTime(inp) {
+  const m = inp.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+  if (!m) return null;
+  let h = parseInt(m[1]), min = m[2]?parseInt(m[2]):0, ampm = m[3]||'';
+  if (/pm/i.test(ampm) && h < 12) h += 12;
+  if (/am/i.test(ampm) && h === 12) h = 0;
+  const suffix = h >= 12 ? 'pm' : 'am';
+  const disp = `${h>12?h-12:h||12}:${String(min).padStart(2,'0')} ${suffix}`;
+  return disp;
+}
+function parseDur(inp) {
+  const hr = inp.match(/(\d+)\s*h(r|ours?)?/i);
+  const mn = inp.match(/(\d+)\s*min/i);
+  if (hr && mn) return `${hr[1]}h ${mn[1]}m`;
+  if (hr) return `${hr[1]}h 00m`;
+  if (mn) return `${mn[1]} min`;
+  return null;
+}
+
+function onNlpInput(val) {
+  if (!val.trim()) return;
+  let match = NLP_RULES.find(r => r.re.test(val));
+  let icon   = match ? match.icon  : '📝';
+  let title  = match ? match.title : val.split(/\s+/)[0];
+  let domain = match ? match.domain: 'Schedule 📋';
+  let start  = parseTime(val) || (match ? match.start : '—');
+  let dur    = parseDur(val)  || (match ? match.dur   : '—');
+  document.querySelector('#parse-result .parsed-icon').textContent = icon;
+  document.getElementById('pr-title').textContent  = title;
+  document.getElementById('pr-start').textContent  = start;
+  document.getElementById('pr-dur').textContent    = dur;
+  document.getElementById('pr-domain').textContent = domain;
+}
+
+function setNlp(val) {
+  const inp = document.getElementById('nlp-inp');
+  inp.value = val;
+  onNlpInput(val);
+}
+
+// ── Build week grid ──
+(function buildWeekGrid() {
+  const body = document.getElementById('wg-body');
+  // hours 7–22, 7 days
+  const hours = [];
+  for (let h = 7; h <= 22; h++) hours.push(h);
+
+  // sparse event data: [hour, day(0=Mon), domain, label]
+  const events = [
+    [7,0,'sleep','Sleep'],[7,1,'sleep','Sleep'],[7,2,'sleep','Sleep'],[7,3,'sleep','Sleep'],
+    [9,0,'study','Calc'],[9,1,'study','Calc'],[9,3,'study','Calc'],
+    [11,0,'study','Bio'],[11,1,'study','Bio'],[11,2,'study','Bio'],[11,3,'study','Bio'],
+    [14,0,'study','Span'],[14,2,'study','Span'],[14,3,'study','Span'],
+    [8,0,'schedule','Run'],[8,3,'schedule','Run'],
+    [13,0,'schedule','Lunch'],[13,1,'schedule','Lunch'],[13,2,'schedule','Lunch'],[13,3,'schedule','Lunch'],
+    [16,0,'schedule','Gym'],[16,2,'schedule','Gym'],
+    [22,0,'sleep','Bed'],[22,1,'sleep','Bed'],[22,2,'sleep','Bed'],[22,3,'sleep','Bed'],
+  ];
+
+  hours.forEach(h => {
+    const label = document.createElement('div');
+    label.className = 'wg-hour-label';
+    label.textContent = h <= 12 ? `${h}a` : `${h-12}p`;
+    body.appendChild(label);
+    for (let d = 0; d < 7; d++) {
+      const cell = document.createElement('div');
+      cell.className = 'wg-cell';
+      const ev = events.find(e => e[0]===h && e[1]===d);
+      if (ev) {
+        const blk = document.createElement('div');
+        blk.className = `wg-block wg-${ev[2]}`;
+        blk.textContent = ev[3];
+        cell.appendChild(blk);
+      }
+      body.appendChild(cell);
+    }
+  });
+})();
+
+// ── Build study heatmap ──
+(function buildHeatmap() {
+  const grid = document.getElementById('heatmap');
+  const vals = [0,0,1,2,1,0,3,2,1,3,4,2,1,
+                0,1,2,3,2,1,0,2,3,2,4,3,2,
+                1,2,3,4,3,2,1,3,4,3,2,4,3,
+                2,3,4,3,2,3,4,3,2,1,3,4,2,
+                3,4,3,2,4,3,2,3,4,2,1,3,4,
+                2,1,0,3,4,3,2,1,4,3,2,4,3,
+                4,3,2,1,3,4,3,2,1,3,4,2,3];
+  vals.forEach(v => {
+    const cell = document.createElement('div');
+    cell.className = `hm-cell hm-${v}`;
+    grid.appendChild(cell);
+  });
+})();
+</script>
+</body>
+</html>
