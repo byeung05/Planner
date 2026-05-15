@@ -1,0 +1,14 @@
+{
+  "expo": {
+    "name": "Planner",
+    "slug": "planner",
+    "version": "1.0.0",
+    "scheme": "planner",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": { "resizeMode": "contain", "backgroundColor": "#F2F2F8" },
+    "ios": { "supportsTablet": false },
+    "android": { "adaptiveIcon": { "backgroundColor": "#F2F2F8" } },
+    "plugins": ["expo-router"]
+  }
+}
