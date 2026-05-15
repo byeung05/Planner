@@ -1,11 +1,10 @@
-import React, { useEffect, useRef, useMemo } from 'react';
+import React, { useEffect, useRef, useMemo, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
@@ -16,6 +15,7 @@ import { TimelineBlock, HOUR_HEIGHT, START_HOUR } from '../../src/components/Tim
 import { GapIndicator } from '../../src/components/GapIndicator';
 import { NowLine } from '../../src/components/NowLine';
 import { StudyTimer } from '../../src/components/StudyTimer';
+import { BlockSheet } from '../../src/components/BlockSheet';
 import { Block } from '../../src/types';
 import {
   currentTimeMinutes,
@@ -72,6 +72,8 @@ export default function TodayScreen() {
   const activeTimerBlock = blocks.find((b) => b.id === activeTimerBlockId) ?? null;
   const weekDays = useMemo(getWeekDays, []);
 
+  const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
+
   // Morning reveal check
   useEffect(() => {
     const hour = new Date().getHours();
@@ -122,11 +124,12 @@ export default function TodayScreen() {
     if (block.domain === 'study') {
       setActiveTimer(activeTimerBlockId === block.id ? null : block.id);
     } else {
-      router.push({ pathname: '/block-detail', params: { blockId: block.id } });
+      setSelectedBlock(block);
     }
   }
 
   return (
+    <View style={styles.root}>
     <SafeAreaView style={styles.safe} edges={['top']}>
 
       {/* ── Date header ── */}
@@ -249,10 +252,22 @@ export default function TodayScreen() {
       </TouchableOpacity>
 
     </SafeAreaView>
+
+      {/* ── Block detail sheet (outside SafeAreaView to cover full screen) ── */}
+      <BlockSheet
+        block={selectedBlock}
+        onClose={() => setSelectedBlock(null)}
+      />
+
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: {
+    flex: 1,
+    backgroundColor: Dark.bg,
+  },
   safe: {
     flex: 1,
     backgroundColor: Dark.bg,
