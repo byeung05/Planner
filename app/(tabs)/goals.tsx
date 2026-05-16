@@ -7,12 +7,20 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../src/colors';
+import { Dark } from '../../src/colors';
 import { useGoalStore } from '../../src/store/useGoalStore';
 import { useSleepStore } from '../../src/store/useSleepStore';
 import { useBlockStore } from '../../src/store/useBlockStore';
 import { DomainRing } from '../../src/components/DomainRing';
 import { formatDuration } from '../../src/utils/time';
+
+// Domain accent colors (dark theme, inline)
+const SLEEP_ACCENT = '#9B8FE0';
+const SLEEP_FILL = 'rgba(155,143,224,0.18)';
+const STUDY_ACCENT = '#E8604C';
+const STUDY_FILL = 'rgba(232,96,76,0.15)';
+const SCHEDULE_ACCENT = '#F5A623';
+const SCHEDULE_FILL = 'rgba(245,166,35,0.15)';
 
 export default function GoalsScreen() {
   const getCurrentGoal = useGoalStore((s) => s.getCurrentGoal);
@@ -68,8 +76,8 @@ export default function GoalsScreen() {
               size={100}
               strokeWidth={10}
               progress={sleepProgress}
-              color={Colors.sleep.accent}
-              bgColor={Colors.sleep.bg}
+              color={SLEEP_ACCENT}
+              bgColor={SLEEP_FILL}
               label={`${Math.round(sleepProgress * 100)}%`}
               subLabel="Sleep"
             />
@@ -79,8 +87,8 @@ export default function GoalsScreen() {
               size={100}
               strokeWidth={10}
               progress={studyProgress}
-              color={Colors.study.accent}
-              bgColor={Colors.study.bg}
+              color={STUDY_ACCENT}
+              bgColor={STUDY_FILL}
               label={`${Math.round(studyProgress * 100)}%`}
               subLabel="Study"
             />
@@ -90,8 +98,8 @@ export default function GoalsScreen() {
               size={100}
               strokeWidth={10}
               progress={scheduleProgress}
-              color={Colors.schedule.accent}
-              bgColor={Colors.schedule.bg}
+              color={SCHEDULE_ACCENT}
+              bgColor={SCHEDULE_FILL}
               label={`${Math.round(scheduleProgress * 100)}%`}
               subLabel="Done"
             />
@@ -118,7 +126,7 @@ export default function GoalsScreen() {
               <Text style={styles.adjustBtnText}>−</Text>
             </TouchableOpacity>
             <View style={styles.goalValueBox}>
-              <Text style={[styles.goalValue, { color: Colors.sleep.accent }]}>
+              <Text style={[styles.goalValue, { color: SLEEP_ACCENT }]}>
                 {formatDuration(goal.sleepNightlyTargetMin)}
               </Text>
               <Text style={styles.goalValueSub}>target</Text>
@@ -138,7 +146,7 @@ export default function GoalsScreen() {
                 styles.progressFill,
                 {
                   width: `${Math.min(100, sleepProgress * 100)}%`,
-                  backgroundColor: Colors.sleep.accent,
+                  backgroundColor: SLEEP_ACCENT,
                 },
               ]}
             />
@@ -165,7 +173,7 @@ export default function GoalsScreen() {
               <Text style={styles.adjustBtnText}>−</Text>
             </TouchableOpacity>
             <View style={styles.goalValueBox}>
-              <Text style={[styles.goalValue, { color: Colors.study.accent }]}>
+              <Text style={[styles.goalValue, { color: STUDY_ACCENT }]}>
                 {formatDuration(goal.studyWeeklyTargetMin)}
               </Text>
               <Text style={styles.goalValueSub}>/ week</Text>
@@ -184,7 +192,7 @@ export default function GoalsScreen() {
                 styles.progressFill,
                 {
                   width: `${Math.min(100, studyProgress * 100)}%`,
-                  backgroundColor: Colors.study.accent,
+                  backgroundColor: STUDY_ACCENT,
                 },
               ]}
             />
@@ -211,7 +219,7 @@ export default function GoalsScreen() {
               <Text style={styles.adjustBtnText}>−</Text>
             </TouchableOpacity>
             <View style={styles.goalValueBox}>
-              <Text style={[styles.goalValue, { color: Colors.schedule.accent }]}>
+              <Text style={[styles.goalValue, { color: SCHEDULE_ACCENT }]}>
                 {goal.scheduleCompletionTargetPct}%
               </Text>
               <Text style={styles.goalValueSub}>target</Text>
@@ -230,7 +238,7 @@ export default function GoalsScreen() {
                 styles.progressFill,
                 {
                   width: `${Math.min(100, scheduleProgress * 100)}%`,
-                  backgroundColor: Colors.schedule.accent,
+                  backgroundColor: SCHEDULE_ACCENT,
                 },
               ]}
             />
@@ -241,20 +249,20 @@ export default function GoalsScreen() {
         <View style={styles.summaryCard}>
           <Text style={styles.summaryTitle}>This Week at a Glance</Text>
           <View style={styles.summaryRow}>
-            <View style={[styles.summaryChip, { backgroundColor: Colors.sleep.bg }]}>
-              <Text style={[styles.summaryChipLabel, { color: Colors.sleep.text }]}>
+            <View style={[styles.summaryChip, { backgroundColor: SLEEP_FILL }]}>
+              <Text style={[styles.summaryChipLabel, { color: SLEEP_ACCENT }]}>
                 😴 {Math.round(sleepProgress * 100)}% sleep goal
               </Text>
             </View>
-            <View style={[styles.summaryChip, { backgroundColor: Colors.study.bg }]}>
-              <Text style={[styles.summaryChipLabel, { color: Colors.study.text }]}>
+            <View style={[styles.summaryChip, { backgroundColor: STUDY_FILL }]}>
+              <Text style={[styles.summaryChipLabel, { color: STUDY_ACCENT }]}>
                 📚 {Math.round(studyProgress * 100)}% study goal
               </Text>
             </View>
           </View>
           <View style={styles.summaryRow}>
-            <View style={[styles.summaryChip, { backgroundColor: Colors.schedule.bg }]}>
-              <Text style={[styles.summaryChipLabel, { color: Colors.schedule.text }]}>
+            <View style={[styles.summaryChip, { backgroundColor: SCHEDULE_FILL }]}>
+              <Text style={[styles.summaryChipLabel, { color: SCHEDULE_ACCENT }]}>
                 ✅ {Math.round(scheduleProgress * 100)}% schedule goal
               </Text>
             </View>
@@ -268,23 +276,23 @@ export default function GoalsScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: Dark.bg,
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: Colors.surface,
+    backgroundColor: Dark.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Dark.border,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.text,
+    color: Dark.text,
   },
   subtitle: {
     fontSize: 12,
-    color: Colors.sub,
+    color: Dark.sub,
     marginTop: 2,
   },
   scroll: {
@@ -299,22 +307,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    backgroundColor: Colors.surface,
+    backgroundColor: Dark.surface,
     borderRadius: 16,
     paddingVertical: 24,
     paddingHorizontal: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Dark.border,
   },
   ringItem: {
     alignItems: 'center',
   },
   goalCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Dark.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Dark.border,
     gap: 12,
   },
   goalHeader: {
@@ -331,11 +339,11 @@ const styles = StyleSheet.create({
   goalTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: Colors.text,
+    color: Dark.text,
   },
   goalActual: {
     fontSize: 12,
-    color: Colors.sub,
+    color: Dark.sub,
     marginTop: 2,
   },
   goalControls: {
@@ -348,16 +356,16 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: Colors.bg,
+    backgroundColor: Dark.bg,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Dark.border,
   },
   adjustBtnText: {
     fontSize: 22,
     fontWeight: '600',
-    color: Colors.text,
+    color: Dark.text,
     lineHeight: 28,
   },
   goalValueBox: {
@@ -370,12 +378,12 @@ const styles = StyleSheet.create({
   },
   goalValueSub: {
     fontSize: 11,
-    color: Colors.sub,
+    color: Dark.sub,
     marginTop: 2,
   },
   progressTrack: {
     height: 6,
-    backgroundColor: Colors.border,
+    backgroundColor: Dark.border,
     borderRadius: 3,
     overflow: 'hidden',
   },
@@ -384,17 +392,17 @@ const styles = StyleSheet.create({
     borderRadius: 3,
   },
   summaryCard: {
-    backgroundColor: Colors.surface,
+    backgroundColor: Dark.surface,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: Dark.border,
     gap: 12,
   },
   summaryTitle: {
     fontSize: 14,
     fontWeight: '700',
-    color: Colors.text,
+    color: Dark.text,
   },
   summaryRow: {
     flexDirection: 'row',

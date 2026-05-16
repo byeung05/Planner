@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import Animated, { runOnJS } from 'react-native-reanimated';
 import { Dark, DomainDark } from '../../src/colors';
 import { useBlockStore } from '../../src/store/useBlockStore';
 import { useSleepStore } from '../../src/store/useSleepStore';
@@ -22,6 +24,7 @@ import {
   blockEndMinutes,
   todayDateString,
   formatTime,
+  snapToQuarter,
 } from '../../src/utils/time';
 
 const END_HOUR = 23;
@@ -128,6 +131,20 @@ export default function TodayScreen() {
     }
   }
 
+  const openAddAtTime = useCallback((tapY: number) => {
+    const totalMin = snapToQuarter(
+      Math.max(START_HOUR * 60, Math.min(23 * 60, Math.round((tapY / HOUR_HEIGHT) * 60) + START_HOUR * 60))
+    );
+    router.push({
+      pathname: '/add-block',
+      params: { presetHour: String(Math.floor(totalMin / 60)), presetMin: String(totalMin % 60) },
+    });
+  }, [router]);
+
+  const timelineDoubleTap = Gesture.Tap()
+    .numberOfTaps(2)
+    .onEnd((e) => { runOnJS(openAddAtTime)(e.y); });
+
   return (
     <View style={styles.root}>
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -196,6 +213,7 @@ export default function TodayScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
+        <GestureDetector gesture={timelineDoubleTap}>
         <View style={[styles.timeline, { height: TIMELINE_HEIGHT + 40 }]}>
 
           {/* Spine */}
@@ -240,6 +258,7 @@ export default function TodayScreen() {
           {/* Now line */}
           <NowLine />
         </View>
+        </GestureDetector>
       </ScrollView>
 
       {/* ── FAB ── */}

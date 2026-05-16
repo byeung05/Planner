@@ -1,5 +1,5 @@
-import React, { useCallback, useState } from 'react';
-import { StyleSheet, Text, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useRef, useState } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, useWindowDimensions } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -65,7 +65,10 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
   const translateY = useSharedValue(0);
   const isDragging = useSharedValue(false);
   const startY = useSharedValue(0);
-  const pressed = useSharedValue(false);
+
+  // Ref-based drag guard: set true when pan activates, cleared 350ms after release
+  // Using useRef (JS thread) avoids cross-thread SharedValue timing issues
+  const dragActiveRef = useRef(false);
 
   const [dragLabel, setDragLabel] = useState<string | null>(null);
 
@@ -84,16 +87,22 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
     moveBlock(block.id, Math.floor(newMin / 60), newMin % 60);
   }, [block.id, block.startHour, block.startMin, moveBlock]);
 
-  const handleTap = useCallback(() => {
-    onPress(block);
-  }, [block, onPress]);
+  // Called from UI thread via runOnJS when pan activates (minDistance reached)
+  const markDragStart = useCallback(() => {
+    dragActiveRef.current = true;
+  }, []);
 
-  // Pan for drag-to-reposition
+  // Called from UI thread via runOnJS when pan ends; clears flag after press window
+  const markDragEnd = useCallback(() => {
+    setTimeout(() => { dragActiveRef.current = false; }, 350);
+  }, []);
+
   const pan = Gesture.Pan()
     .minDistance(4)
     .onStart(() => {
       startY.value = translateY.value;
       isDragging.value = true;
+      runOnJS(markDragStart)();
     })
     .onUpdate((e) => {
       translateY.value = startY.value + e.translationY;
@@ -104,26 +113,15 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
       runOnJS(onSnap)(translateY.value);
       translateY.value = withSpring(0, { damping: 24, stiffness: 300 });
       runOnJS(clearDragLabel)();
+      runOnJS(markDragEnd)();
     });
 
-  // Tap for opening block sheet — Exclusive ensures pan cancels tap when dragging
-  const tap = Gesture.Tap()
-    .onBegin(() => { pressed.value = true; })
-    .onFinalize(() => { pressed.value = false; })
-    .onEnd(() => { runOnJS(handleTap)(); });
-
-  const gesture = Gesture.Exclusive(pan, tap);
-
-  const wrapperStyle = useAnimatedStyle(() => ({
+  const animStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],
     zIndex: isDragging.value ? 300 : 10,
     shadowOpacity: isDragging.value ? 0.5 : isPast ? 0.05 : 0.15,
     shadowRadius: isDragging.value ? 16 : 5,
     elevation: isDragging.value ? 12 : isPast ? 1 : 3,
-  }));
-
-  const blockStyle = useAnimatedStyle(() => ({
-    opacity: pressed.value ? 0.75 : 1,
   }));
 
   const isCompleted = Boolean(block.completedAt);
@@ -140,12 +138,12 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
     : `${Math.floor(block.durationMin / 60)}h ${block.durationMin % 60}m`;
 
   return (
-    <GestureDetector gesture={gesture}>
+    <GestureDetector gesture={pan}>
       <Animated.View
         style={[
           styles.wrapper,
           { top: baseTop, height, left: LEFT_OFFSET, right: RIGHT_MARGIN },
-          wrapperStyle,
+          animStyle,
         ]}
       >
         {/* Drag time badge */}
@@ -155,18 +153,23 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
           </View>
         )}
 
-        <Animated.View
+        <TouchableOpacity
           style={[
             styles.block,
             { height },
             isCurrent && { borderColor: accent },
             isCompleted && styles.blockDone,
-            blockStyle,
           ]}
+          onPress={() => {
+            // Block the tap that fires immediately after a drag ends
+            if (!dragActiveRef.current) onPress(block);
+          }}
+          activeOpacity={0.82}
         >
-          {/* Progressive fill — covers top portion based on elapsed time */}
+          {/* Progressive fill — top portion colored based on elapsed time */}
           {fillPct > 0 && (
             <View
+              pointerEvents="none"
               style={[
                 styles.fillLayer,
                 {
@@ -174,11 +177,10 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
                   backgroundColor: fillColor,
                 },
               ]}
-              pointerEvents="none"
             />
           )}
 
-          {/* Domain accent stripe on the left */}
+          {/* Domain accent stripe */}
           <View
             style={[
               styles.accentStripe,
@@ -186,7 +188,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
             ]}
           />
 
-          {/* Text content */}
+          {/* Text */}
           <View style={styles.textArea}>
             <View style={styles.titleRow}>
               <Text style={styles.icon}>{block.icon}</Text>
@@ -214,7 +216,6 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
               </Text>
             )}
 
-            {/* Slim progress bar for the active block */}
             {isCurrent && height > 52 && (
               <View style={styles.progressTrack}>
                 <View
@@ -226,7 +227,7 @@ export function TimelineBlock({ block, onPress, isTimerActive = false }: Props) 
               </View>
             )}
           </View>
-        </Animated.View>
+        </TouchableOpacity>
       </Animated.View>
     </GestureDetector>
   );

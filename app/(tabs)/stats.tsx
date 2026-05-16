@@ -7,16 +7,19 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Colors } from '../../src/colors';
+import { Dark } from '../../src/colors';
 import { useSleepStore } from '../../src/store/useSleepStore';
 import { useBlockStore } from '../../src/store/useBlockStore';
 import { useGoalStore } from '../../src/store/useGoalStore';
-import { ProgressBar } from '../../src/components/ProgressBar';
 import { formatDuration, shortDayLabel } from '../../src/utils/time';
 
 type TabKey = 'sleep' | 'study' | 'days';
 
-const BAR_MAX_WIDTH = 220;
+// Domain accent colors (dark theme, inline)
+const SLEEP_ACCENT = '#9B8FE0';
+const STUDY_ACCENT = '#E8604C';
+const SCHEDULE_ACCENT = '#F5A623';
+const SCHEDULE_FILL = 'rgba(245,166,35,0.15)';
 
 export default function StatsScreen() {
   const [activeTab, setActiveTab] = useState<TabKey>('sleep');
@@ -29,7 +32,10 @@ export default function StatsScreen() {
   const currentGoal = getCurrentGoal();
 
   // ---- Sleep tab data ----
-  const maxSleepMin = Math.max(...sleepEntries.map((e) => e.durationMin), currentGoal.sleepNightlyTargetMin);
+  const maxSleepMin = Math.max(
+    ...sleepEntries.map((e) => e.durationMin),
+    currentGoal.sleepNightlyTargetMin
+  );
 
   // ---- Study tab data ----
   const studyBlocks = todayBlocks.filter((b) => b.domain === 'study');
@@ -51,7 +57,6 @@ export default function StatsScreen() {
   const completedBlocks = todayBlocks.filter((b) => b.completedAt !== undefined).length;
   const completionPct = totalBlocks > 0 ? completedBlocks / totalBlocks : 0;
 
-  // Per-sleep-entry completion (reuse sleep entries as proxy for "days")
   const dayCompletions = sleepEntries.map((entry) => ({
     date: entry.date,
     label: shortDayLabel(entry.date),
@@ -113,7 +118,7 @@ export default function StatsScreen() {
                         styles.barFill,
                         {
                           width: `${Math.min(100, (entry.durationMin / maxSleepMin) * 100)}%`,
-                          backgroundColor: Colors.sleep.accent,
+                          backgroundColor: SLEEP_ACCENT,
                         },
                       ]}
                     />
@@ -132,10 +137,12 @@ export default function StatsScreen() {
               ))
             )}
             <View style={styles.legendRow}>
-              <View style={[styles.legendDot, { backgroundColor: Colors.sleep.accent }]} />
+              <View style={[styles.legendDot, { backgroundColor: SLEEP_ACCENT }]} />
               <Text style={styles.legendLabel}>Sleep duration</Text>
-              <View style={[styles.legendLine, { backgroundColor: Colors.sub }]} />
-              <Text style={styles.legendLabel}>Target ({formatDuration(currentGoal.sleepNightlyTargetMin)})</Text>
+              <View style={[styles.legendLine, { backgroundColor: Dark.sub }]} />
+              <Text style={styles.legendLabel}>
+                Target ({formatDuration(currentGoal.sleepNightlyTargetMin)})
+              </Text>
             </View>
           </View>
         )}
@@ -163,7 +170,7 @@ export default function StatsScreen() {
                         styles.barFill,
                         {
                           width: `${Math.min(100, (subject.totalMin / maxStudyMin) * 100)}%`,
-                          backgroundColor: Colors.study.accent,
+                          backgroundColor: STUDY_ACCENT,
                         },
                       ]}
                     />
@@ -174,7 +181,7 @@ export default function StatsScreen() {
             )}
             <View style={styles.totalRow}>
               <Text style={styles.totalLabel}>Total today</Text>
-              <Text style={[styles.totalValue, { color: Colors.study.accent }]}>
+              <Text style={[styles.totalValue, { color: STUDY_ACCENT }]}>
                 {formatDuration(subjects.reduce((sum, s) => sum + s.totalMin, 0))}
               </Text>
             </View>
@@ -213,14 +220,32 @@ export default function StatsScreen() {
             {/* Today's schedule completion */}
             <View style={styles.divider} />
             <Text style={styles.sectionTitle}>Today's Schedule</Text>
-            <ProgressBar
-              progress={completionPct}
-              color={Colors.schedule.accent}
-              bgColor={Colors.schedule.bg}
-              height={12}
-              label="Blocks completed"
-              rightLabel={`${completedBlocks}/${totalBlocks}`}
-            />
+            <View>
+              <View style={styles.progressLabelRow}>
+                <Text style={styles.progressLabel}>Blocks completed</Text>
+                <Text style={styles.progressRight}>
+                  {completedBlocks}/{totalBlocks}
+                </Text>
+              </View>
+              <View
+                style={{
+                  height: 6,
+                  backgroundColor: Dark.border,
+                  borderRadius: 3,
+                  overflow: 'hidden',
+                  marginTop: 6,
+                }}
+              >
+                <View
+                  style={{
+                    height: 6,
+                    width: `${Math.min(100, completionPct * 100)}%`,
+                    backgroundColor: SCHEDULE_ACCENT,
+                    borderRadius: 3,
+                  }}
+                />
+              </View>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -229,36 +254,36 @@ export default function StatsScreen() {
 }
 
 function qualityColor(quality: number): string {
-  if (quality >= 4) return Colors.sleep.accent;
-  if (quality >= 3) return Colors.schedule.accent;
-  return Colors.study.accent;
+  if (quality >= 4) return SLEEP_ACCENT;
+  if (quality >= 3) return SCHEDULE_ACCENT;
+  return STUDY_ACCENT;
 }
 
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: Colors.bg,
+    backgroundColor: Dark.bg,
   },
   header: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: Colors.surface,
+    backgroundColor: Dark.surface,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Dark.border,
   },
   title: {
     fontSize: 24,
     fontWeight: '700',
-    color: Colors.text,
+    color: Dark.text,
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: Colors.surface,
+    backgroundColor: Dark.surface,
     paddingHorizontal: 16,
     paddingBottom: 12,
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: Colors.border,
+    borderBottomColor: Dark.border,
   },
   tab: {
     flex: 1,
@@ -268,10 +293,10 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingVertical: 8,
     borderRadius: 10,
-    backgroundColor: Colors.bg,
+    backgroundColor: Dark.block,
   },
   tabActive: {
-    backgroundColor: Colors.text,
+    backgroundColor: Dark.accent,
   },
   tabEmoji: {
     fontSize: 14,
@@ -279,10 +304,10 @@ const styles = StyleSheet.create({
   tabLabel: {
     fontSize: 13,
     fontWeight: '600',
-    color: Colors.sub,
+    color: Dark.sub,
   },
   tabLabelActive: {
-    color: Colors.surface,
+    color: Dark.text,
   },
   scroll: {
     flex: 1,
@@ -297,7 +322,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: Colors.text,
+    color: Dark.text,
   },
   barRow: {
     flexDirection: 'row',
@@ -314,7 +339,7 @@ const styles = StyleSheet.create({
     width: 36,
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.text,
+    color: Dark.text,
   },
   moodEmoji: {
     fontSize: 14,
@@ -325,13 +350,13 @@ const styles = StyleSheet.create({
   subjectName: {
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.text,
+    color: Dark.text,
     flex: 1,
   },
   barTrack: {
     flex: 1,
     height: 20,
-    backgroundColor: Colors.border,
+    backgroundColor: Dark.border,
     borderRadius: 10,
     overflow: 'hidden',
     position: 'relative',
@@ -345,14 +370,14 @@ const styles = StyleSheet.create({
     top: 2,
     bottom: 2,
     width: 2,
-    backgroundColor: Colors.sub,
+    backgroundColor: Dark.sub,
     opacity: 0.6,
   },
   barValue: {
     width: 48,
     fontSize: 12,
     fontWeight: '600',
-    color: Colors.sub,
+    color: Dark.sub,
     textAlign: 'right',
   },
   legendRow: {
@@ -373,7 +398,7 @@ const styles = StyleSheet.create({
   },
   legendLabel: {
     fontSize: 11,
-    color: Colors.sub,
+    color: Dark.sub,
   },
   totalRow: {
     flexDirection: 'row',
@@ -381,12 +406,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingTop: 8,
     borderTopWidth: 1,
-    borderTopColor: Colors.border,
+    borderTopColor: Dark.border,
   },
   totalLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: Colors.text,
+    color: Dark.text,
   },
   totalValue: {
     fontSize: 18,
@@ -394,8 +419,23 @@ const styles = StyleSheet.create({
   },
   divider: {
     height: 1,
-    backgroundColor: Colors.border,
+    backgroundColor: Dark.border,
     marginVertical: 8,
+  },
+  progressLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  progressLabel: {
+    fontSize: 13,
+    color: Dark.text,
+    fontWeight: '500',
+  },
+  progressRight: {
+    fontSize: 13,
+    color: Dark.sub,
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
@@ -408,11 +448,11 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: '600',
-    color: Colors.text,
+    color: Dark.text,
   },
   emptySubtext: {
     fontSize: 13,
-    color: Colors.sub,
+    color: Dark.sub,
     textAlign: 'center',
   },
 });

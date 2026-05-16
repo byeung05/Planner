@@ -7,7 +7,7 @@ import { StyleSheet } from 'react-native';
 export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen
